@@ -1,0 +1,163 @@
+/** biome-ignore-all lint/suspicious/noExplicitAny: `any` is used by the interface we're implementing. */
+"use client";
+
+import type { FindFirstArgs, FindManyArgs, UpdateArgs } from "@zenstackhq/orm";
+import type { GetModels } from "@zenstackhq/schema";
+import type {
+  CreateParams,
+  CreateResult,
+  DataProvider,
+  DeleteManyParams,
+  DeleteManyResult,
+  DeleteParams,
+  DeleteResult,
+  GetListParams,
+  GetListResult,
+  GetManyParams,
+  GetManyReferenceParams,
+  GetManyReferenceResult,
+  GetManyResult,
+  GetOneParams,
+  GetOneResult,
+  Identifier,
+  QueryFunctionContext,
+  RaRecord,
+  UpdateManyParams,
+  UpdateManyResult,
+  UpdateParams,
+  UpdateResult,
+} from "react-admin";
+
+import type { SchemaType } from "@/../zenstack/schema";
+import { countDataSchema } from "./schemas";
+import { fetchWithParams } from "./utils";
+
+export class RPCDataProvider implements DataProvider {
+  public readonly supportAbortSignal = true;
+
+  private readonly apiBase: URL;
+
+  public constructor(apiBase: string) {
+    if (!apiBase.endsWith("/")) {
+      // Append a forward slash so URL base resolution works as expected.
+      apiBase += "/";
+    }
+    if (!apiBase.startsWith("http")) {
+      this.apiBase = new URL(apiBase, window.location.origin);
+    } else {
+      this.apiBase = new URL(apiBase);
+    }
+  }
+
+  public async getList<RecordType extends RaRecord = any>(
+    resource: string,
+    params: GetListParams & QueryFunctionContext,
+  ): Promise<GetListResult<RecordType>> {
+    const countUrl = new URL(`${resource}/count`, this.apiBase);
+    const findManyUrl = new URL(`${resource}/findMany`, this.apiBase);
+
+    const qInput: FindManyArgs<SchemaType, GetModels<SchemaType>> = {};
+    if (params.filter && Object.keys(params.filter).length > 0) {
+      console.log({ filter: params.filter });
+      qInput.where = {};
+    }
+    if (params.sort) {
+      qInput.orderBy = {
+        [params.sort.field]: params.sort.order.toLowerCase(),
+      };
+    }
+
+    const countDataPromise = fetchWithParams(countUrl, qInput, { schema: countDataSchema, signal: params.signal });
+
+    if (params.pagination) {
+      qInput.skip = (params.pagination.page - 1) * params.pagination.perPage;
+      qInput.take = params.pagination.perPage;
+    }
+    const findManyDataPromise = fetchWithParams(findManyUrl, qInput, { signal: params.signal });
+
+    const [countData, findManyData] = await Promise.all([countDataPromise, findManyDataPromise]);
+
+    return {
+      total: countData,
+      data: findManyData as RecordType[],
+    };
+  }
+
+  public async getOne<RecordType extends RaRecord = any>(
+    resource: string,
+    params: GetOneParams<RecordType> & QueryFunctionContext,
+  ): Promise<GetOneResult<RecordType>> {
+    const findFirstUrl = new URL(`${resource}/findFirst`, this.apiBase);
+
+    const qInput: FindFirstArgs<SchemaType, GetModels<SchemaType>> = {
+      where: {
+        // @ts-expect-error
+        id: { equals: params.id },
+      },
+    };
+    const findFirstData = await fetchWithParams(findFirstUrl, qInput, { signal: params.signal });
+    if (!findFirstData) {
+      throw new Error(`Could not find '${resource}' with id '${params.id}'`);
+    }
+
+    return {
+      data: findFirstData as RecordType,
+    };
+  }
+
+  public async getMany<RecordType extends RaRecord = any>(
+    resource: string,
+    params: GetManyParams<RecordType> & QueryFunctionContext,
+  ): Promise<GetManyResult<RecordType>> {
+    throw new Error("Not yet implemented.");
+  }
+  public async getManyReference<RecordType extends RaRecord = any>(
+    resource: string,
+    params: GetManyReferenceParams & QueryFunctionContext,
+  ): Promise<GetManyReferenceResult<RecordType>> {
+    throw new Error("Not yet implemented.");
+  }
+  public async update<RecordType extends RaRecord = any>(
+    resource: string,
+    params: UpdateParams,
+  ): Promise<UpdateResult<RecordType>> {
+    const updateUrl = new URL(`${resource}/update`, this.apiBase);
+
+    const qInput: UpdateArgs<SchemaType, GetModels<SchemaType>> = {
+      where: {
+        // @ts-expect-error
+        id: { equals: params.id },
+      },
+      data: params.data,
+    };
+    const updateData = await fetchWithParams(updateUrl, qInput, { method: "PUT" });
+
+    return {
+      data: updateData as RecordType,
+    };
+  }
+  public async updateMany<RecordType extends RaRecord = any>(
+    resource: string,
+    params: UpdateManyParams,
+  ): Promise<UpdateManyResult<RecordType>> {
+    throw new Error("Not yet implemented.");
+  }
+  public async create<
+    RecordType extends Omit<RaRecord, "id"> = any,
+    ResultRecordType extends RaRecord = RecordType & { id: Identifier },
+  >(resource: string, params: CreateParams): Promise<CreateResult<ResultRecordType>> {
+    throw new Error("Not yet implemented.");
+  }
+  public async delete<RecordType extends RaRecord = any>(
+    resource: string,
+    params: DeleteParams<RecordType>,
+  ): Promise<DeleteResult<RecordType>> {
+    throw new Error("Not yet implemented.");
+  }
+  public async deleteMany<RecordType extends RaRecord = any>(
+    resource: string,
+    params: DeleteManyParams<RecordType>,
+  ): Promise<DeleteManyResult<RecordType>> {
+    throw new Error("Not yet implemented.");
+  }
+}

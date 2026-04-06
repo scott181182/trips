@@ -1,0 +1,135 @@
+import "./auth"
+
+enum TripRole {
+  OWNER
+  CONTRIBUTOR
+  VIEWER
+  SPECTATOR
+
+  @@map('trip_role')
+}
+model Trip {
+  id         String      @id
+  name       String
+
+  users      TripUser[]
+  groups     TripGroup[]
+  legs       TripLeg[]
+  excursions Excursion[]
+
+  @@map('trip')
+}
+model TripUser {
+  tripId String
+  userId String
+  role   TripRole
+
+  trip   Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  groups TripGroupUser[]
+
+  @@id([tripId, userId])
+  @@map('trip_user')
+}
+
+enum TripGroupRole {
+  OWNER
+  CONTRIBUTOR
+  VIEWER
+
+  @@map('trip_group_role')
+}
+model TripGroup {
+  id             String          @id
+  name           String
+
+  tripId         String
+  trip           Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  tripGroupUsers TripGroupUser[]
+
+  @@unique([id, tripId])
+  @@map('trip_group')
+}
+model TripGroupUser {
+  tripId      String
+  userId      String
+  tripGroupId String
+
+  tripGroup   TripGroup @relation(fields: [tripId, tripGroupId], references: [tripId, id], onDelete: Cascade, onUpdate: Cascade)
+  tripUser    TripUser  @relation(fields: [tripId, userId], references: [tripId, userId], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([tripGroupId, tripId, userId])
+  @@map('trip_group_user')
+}
+
+enum RsvpStatus {
+  ACCEPTED
+  DECLINED
+  MAYBE
+
+  @@map('rsvp_status')
+}
+
+model TripLegRsvp {
+  tripLegId String
+  userId    String
+  status    RsvpStatus
+  notes     String?
+
+  tripLeg   TripLeg    @relation(fields: [tripLegId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([tripLegId, userId])
+  @@map('trip_leg_rsvp')
+}
+
+// A contiguous portion of a trip, like a location or a period of travel.
+model TripLeg {
+  id         String        @id
+  name       String
+  startTime  DateTime
+  endTime    DateTime
+
+  tripId     String
+  trip       Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  excursions Excursion[]
+  rsvps      TripLegRsvp[]
+
+  @@unique([tripId, name])
+  @@unique([id, tripId])
+
+  @@map('trip_leg')
+}
+
+model ExcursionRsvp {
+  excursionId String
+  userId      String
+  status      RsvpStatus
+  notes       String?
+
+  excursion   Excursion  @relation(fields: [excursionId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+
+  @@id([excursionId, userId])
+  @@map('excursion_rsvp')
+}
+
+// A specific activity or event during a trip, like a tour, museum visit, or planned meal.
+model Excursion {
+  id        String          @id
+  name      String
+  startTime DateTime
+  endTime   DateTime
+
+  tripId    String
+  trip      Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tripLegId String?
+  tripLeg   TripLeg?        @relation(fields: [tripId, tripLegId], references: [tripId, id], onDelete: Cascade, onUpdate: Cascade)
+
+  rsvps     ExcursionRsvp[]
+
+  @@map('excursion')
+}
