@@ -3,7 +3,6 @@
   "biome.enabled": true,
   "editor.codeActionsOnSave": {
     "source.removeUnusedImports": "explicit",
-    "source.organizeImports": "explicit",
     "source.fixAll.biome": "explicit"
   },
   "[typescript]": {

@@ -89,12 +89,18 @@ export class RPCDataProvider implements DataProvider {
   ): Promise<GetOneResult<RecordType>> {
     const findFirstUrl = new URL(`${resource}/findFirst`, this.apiBase);
 
+    console.log({ getOne: params });
+
     const qInput: FindFirstArgs<SchemaType, GetModels<SchemaType>> = {
       where: {
         // @ts-expect-error
         id: { equals: params.id },
       },
     };
+    if (params.meta?.include) {
+      (qInput as any).include = params.meta.include;
+    }
+
     const findFirstData = await fetchWithParams(findFirstUrl, qInput, { signal: params.signal });
     if (!findFirstData) {
       throw new Error(`Could not find '${resource}' with id '${params.id}'`);
@@ -109,8 +115,7 @@ export class RPCDataProvider implements DataProvider {
     resource: string,
     params: GetManyParams<RecordType> & QueryFunctionContext,
   ): Promise<GetManyResult<RecordType>> {
-    console.warn("getMany not yet implement", { resource, params });
-    throw new Error("Not yet implemented: getMany");
+    return this.getList(resource, params);
   }
   public async getManyReference<RecordType extends RaRecord = any>(
     resource: string,

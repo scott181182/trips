@@ -6,7 +6,8 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": false
+    "ignoreUnknown": false,
+    "includes": ["**", "!zenstack/*.ts"]
   },
   "formatter": {
     "enabled": true,
@@ -44,16 +45,7 @@
         "organizeImports": {
           "level": "on",
           "options": {
-            "groups": [
-              [
-                ":BUN:",
-                ":NODE:"
-              ],
-              ":BLANK_LINE:",
-              ":PACKAGE:",
-              ":BLANK_LINE:",
-              "**"
-            ]
+            "groups": [[":BUN:", ":NODE:"], ":BLANK_LINE:", ":PACKAGE:", ":BLANK_LINE:", "**"]
           }
         }
       }

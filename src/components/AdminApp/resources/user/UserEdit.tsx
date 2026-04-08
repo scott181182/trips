@@ -1,6 +1,6 @@
 import { BooleanInput, DateInput, Edit, SimpleForm, TextInput } from "react-admin";
 
-import { RoleInput } from "../../inputs/RoleInput";
+import { RoleInput } from "../../inputs/enums";
 
 export function UserEdit() {
   return (
