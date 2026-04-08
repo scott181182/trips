@@ -8,6 +8,14 @@ export const auth = betterAuth({
   database: zenstackAdapter(db, {
     provider: "sqlite",
   }),
+  user: {
+    additionalFields: {
+      role: {
+        type: "string",
+        input: false,
+      },
+    },
+  },
   socialProviders: {
     google: () => {
       const clientId = process.env.GOOGLE_CLIENT_ID;

@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: `any` is used by the interface we're implementing. */
 "use client";
 
-import type { FindFirstArgs, FindManyArgs, UpdateArgs } from "@zenstackhq/orm";
+import type { CreateArgs, FindFirstArgs, FindManyArgs, UpdateArgs } from "@zenstackhq/orm";
 import type { GetModels } from "@zenstackhq/schema";
 import type {
   CreateParams,
@@ -109,13 +109,15 @@ export class RPCDataProvider implements DataProvider {
     resource: string,
     params: GetManyParams<RecordType> & QueryFunctionContext,
   ): Promise<GetManyResult<RecordType>> {
-    throw new Error("Not yet implemented.");
+    console.warn("getMany not yet implement", { resource, params });
+    throw new Error("Not yet implemented: getMany");
   }
   public async getManyReference<RecordType extends RaRecord = any>(
     resource: string,
     params: GetManyReferenceParams & QueryFunctionContext,
   ): Promise<GetManyReferenceResult<RecordType>> {
-    throw new Error("Not yet implemented.");
+    console.warn("getManyReference not yet implement", { resource, params });
+    throw new Error("Not yet implemented: getManyReference");
   }
   public async update<RecordType extends RaRecord = any>(
     resource: string,
@@ -140,24 +142,36 @@ export class RPCDataProvider implements DataProvider {
     resource: string,
     params: UpdateManyParams,
   ): Promise<UpdateManyResult<RecordType>> {
-    throw new Error("Not yet implemented.");
+    console.warn("updateMany not yet implement", { resource, params });
+    throw new Error("Not yet implemented: updateMany");
   }
   public async create<
     RecordType extends Omit<RaRecord, "id"> = any,
     ResultRecordType extends RaRecord = RecordType & { id: Identifier },
   >(resource: string, params: CreateParams): Promise<CreateResult<ResultRecordType>> {
-    throw new Error("Not yet implemented.");
+    const createUrl = new URL(`${resource}/create`, this.apiBase);
+
+    const qInput: CreateArgs<SchemaType, GetModels<SchemaType>> = {
+      data: params.data,
+    };
+    const createData = await fetchWithParams(createUrl, qInput, { method: "POST" });
+
+    return {
+      data: createData as ResultRecordType,
+    };
   }
   public async delete<RecordType extends RaRecord = any>(
     resource: string,
     params: DeleteParams<RecordType>,
   ): Promise<DeleteResult<RecordType>> {
-    throw new Error("Not yet implemented.");
+    console.warn("delete not yet implement", { resource, params });
+    throw new Error("Not yet implemented: delete");
   }
   public async deleteMany<RecordType extends RaRecord = any>(
     resource: string,
     params: DeleteManyParams<RecordType>,
   ): Promise<DeleteManyResult<RecordType>> {
-    throw new Error("Not yet implemented.");
+    console.warn("deleteMany not yet implement", { resource, params });
+    throw new Error("Not yet implemented: deleteMany");
   }
 }

@@ -12,7 +12,6 @@ export function ProfileIcon() {
   }
 
   if (data.user.image) {
-    console.log("Image!");
     return <Avatar alt={data.user.name} src={data.user.image} />;
   } else {
     const initials = data.user.name
