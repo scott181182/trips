@@ -1,50 +1,20 @@
-import { useCallback } from "react";
-import {
-  AutocompleteArrayInput,
-  Create,
-  ReferenceArrayInput,
-  SimpleForm,
-  TextInput,
-  type TransformData,
-} from "react-admin";
+import { ArrayInput, Create, ReferenceInput, SimpleForm, SimpleFormIterator, TextInput } from "react-admin";
 
-import type { TripCreateArgs } from "@/../zenstack/input";
-
-interface FormValues {
-  id: string;
-  name: string;
-  userIds: string[];
-}
+import { TripRoleInput } from "../../inputs/enums";
+import { transform } from "./mutation";
 
 export function TripCreate() {
-  const transform = useCallback<TransformData>(
-    (data: FormValues) =>
-      ({
-        id: data.id,
-        name: data.name,
-        users:
-          data.userIds && data.userIds.length > 0
-            ? {
-                createMany: {
-                  data: data.userIds.map((userId) => ({
-                    userId,
-                    role: "CONTRIBUTOR",
-                  })),
-                },
-              }
-            : undefined,
-      }) satisfies TripCreateArgs["data"],
-    [],
-  );
-
   return (
     <Create transform={transform}>
       <SimpleForm>
         <TextInput source="id" />
         <TextInput source="name" />
-        <ReferenceArrayInput source="userIds" reference="user">
-          <AutocompleteArrayInput label="Users" />
-        </ReferenceArrayInput>
+        <ArrayInput source="users">
+          <SimpleFormIterator inline>
+            <ReferenceInput source="userId" reference="user" />
+            <TripRoleInput source="role" />
+          </SimpleFormIterator>
+        </ArrayInput>
       </SimpleForm>
     </Create>
   );

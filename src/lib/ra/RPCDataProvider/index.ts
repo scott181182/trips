@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/suspicious/noExplicitAny: `any` is used by the interface we're implementing. */
 "use client";
 
+import type { SchemaType } from "@zenstack/schema";
 import type { CreateArgs, FindFirstArgs, FindManyArgs, UpdateArgs } from "@zenstackhq/orm";
 import type { GetModels } from "@zenstackhq/schema";
 import type {
@@ -28,7 +29,6 @@ import type {
   UpdateResult,
 } from "react-admin";
 
-import type { SchemaType } from "@/../zenstack/schema";
 import { countDataSchema } from "./schemas";
 import { fetchWithParams } from "./utils";
 

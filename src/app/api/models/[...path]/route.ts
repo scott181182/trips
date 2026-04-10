@@ -1,9 +1,9 @@
+import { schema } from "@zenstack/schema";
 import { RPCApiHandler } from "@zenstackhq/server/api";
 import { NextRequestHandler } from "@zenstackhq/server/next";
 import type { NextRequest } from "next/server";
 
-import { schema } from "@/../zenstack/schema";
-import { auth } from "@/lib/auth/server";
+import { type AuthUser, auth } from "@/lib/auth/server";
 import { db } from "@/server/db";
 
 const handler = NextRequestHandler({
@@ -12,7 +12,7 @@ const handler = NextRequestHandler({
     const session = await auth.api.getSession({
       headers: req.headers,
     });
-    return session ? db.$setAuth(session.user) : db;
+    return session ? db.$setAuth(session.user as AuthUser) : db;
   },
   apiHandler: new RPCApiHandler({
     schema,

@@ -1,10 +1,10 @@
 "use client";
 
 import { AppBar, Container, IconButton, Menu, MenuItem, Toolbar, Typography } from "@mui/material";
+import type { Role } from "@zenstack/models";
 import Link from "next/link";
 import { useCallback, useState } from "react";
 
-import type { Role } from "@/../zenstack/models";
 import { authClient } from "@/lib/auth/client";
 import { ProfileIcon } from "./ProfileIcon";
 

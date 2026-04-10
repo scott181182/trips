@@ -1,3 +1,4 @@
+import type { Role } from "@zenstack/models";
 import { zenstackAdapter } from "@zenstackhq/better-auth";
 import { betterAuth } from "better-auth";
 
@@ -33,3 +34,6 @@ export const auth = betterAuth({
     },
   },
 });
+
+export type AuthSession = typeof auth.$Infer.Session;
+export type AuthUser = Omit<AuthSession["user"], "role"> & { role: Role };

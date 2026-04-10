@@ -1,10 +1,9 @@
 import path from "node:path";
 
+import { schema } from "@zenstack/schema";
 import { ZenStackClient } from "@zenstackhq/orm";
 import { SqliteDialect } from "@zenstackhq/orm/dialects/sqlite";
 import SQLite from "better-sqlite3";
-
-import { schema } from "@/../zenstack/schema";
 
 const DATABASE_PATH = process.env.DATABASE_PATH || path.join("zenstack", "dev.db");
 

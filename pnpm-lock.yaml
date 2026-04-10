@@ -47,6 +47,9 @@ importers:
       next:
         specifier: ^16.2.2
         version: 16.2.2(@babel/core@7.29.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      radashi:
+        specifier: ^12.7.2
+        version: 12.7.2
       react:
         specifier: ^19.2.4
         version: 19.2.4
@@ -2422,6 +2425,10 @@ packages:
       react-is: ^18.0.0 || ^19.0.0
       react-router: ^6.28.1 || ^7.1.1
       react-router-dom: ^6.28.1 || ^7.1.1
+
+  radashi@12.7.2:
+    resolution: {integrity: sha512-BfoN4XJll34ok3rCHjVlRypymJvD3cE+M3UATC8519wUgHl1/AXt2dEEIFv5865gO6t0ENAU6qEOqjr/NcIRyQ==}
+    engines: {node: '>=16.0.0'}
 
   range-parser@1.2.1:
     resolution: {integrity: sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==}
@@ -5118,6 +5125,8 @@ snapshots:
       react-router: 7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-router-dom: 7.14.0(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-transition-group: 4.4.5(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+
+  radashi@12.7.2: {}
 
   range-parser@1.2.1: {}
 

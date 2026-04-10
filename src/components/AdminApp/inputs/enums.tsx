@@ -1,6 +1,5 @@
+import type { Role, TripRole } from "@zenstack/models";
 import { SelectInput, type SelectInputProps } from "react-admin";
-
-import type { Role, TripRole } from "@/../zenstack/models";
 
 interface SelectOption<T> {
   id: T;
