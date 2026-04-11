@@ -41,7 +41,7 @@ enum TripGroupRole {
   @@map('trip_group_role')
 }
 model TripGroup {
-  id             String          @id
+  id             String          @id @default(cuid())
   name           String
 
   tripId         String
@@ -53,12 +53,13 @@ model TripGroup {
   @@map('trip_group')
 }
 model TripGroupUser {
+  role        TripGroupRole
   tripId      String
   userId      String
   tripGroupId String
 
-  tripGroup   TripGroup @relation(fields: [tripId, tripGroupId], references: [tripId, id], onDelete: Cascade, onUpdate: Cascade)
-  tripUser    TripUser  @relation(fields: [tripId, userId], references: [tripId, userId], onDelete: Cascade, onUpdate: Cascade)
+  tripGroup   TripGroup     @relation(fields: [tripId, tripGroupId], references: [tripId, id], onDelete: Cascade, onUpdate: Cascade)
+  tripUser    TripUser      @relation(fields: [tripId, userId], references: [tripId, userId], onDelete: Cascade, onUpdate: Cascade)
 
   @@id([tripGroupId, tripId, userId])
   @@map('trip_group_user')
@@ -87,7 +88,7 @@ model TripLegRsvp {
 
 // A contiguous portion of a trip, like a location or a period of travel.
 model TripLeg {
-  id         String        @id
+  id         String        @id @default(cuid())
   name       String
   startTime  DateTime
   endTime    DateTime
@@ -119,7 +120,7 @@ model ExcursionRsvp {
 
 // A specific activity or event during a trip, like a tour, museum visit, or planned meal.
 model Excursion {
-  id        String          @id
+  id        String          @id @default(cuid())
   name      String
   startTime DateTime
   endTime   DateTime

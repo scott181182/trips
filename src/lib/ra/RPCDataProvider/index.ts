@@ -29,15 +29,21 @@ import type {
   UpdateResult,
 } from "react-admin";
 
+import { type QueryHandlers, resolveWhereInput } from "./filter";
 import { countDataSchema } from "./schemas";
 import { fetchWithParams } from "./utils";
+
+export interface RPCDataProviderOptions {
+  queryHandlers?: QueryHandlers;
+}
 
 export class RPCDataProvider implements DataProvider {
   public readonly supportAbortSignal = true;
 
   private readonly apiBase: URL;
+  private readonly queryHandlers: QueryHandlers;
 
-  public constructor(apiBase: string) {
+  public constructor(apiBase: string, options?: RPCDataProviderOptions) {
     if (!apiBase.endsWith("/")) {
       // Append a forward slash so URL base resolution works as expected.
       apiBase += "/";
@@ -47,6 +53,8 @@ export class RPCDataProvider implements DataProvider {
     } else {
       this.apiBase = new URL(apiBase);
     }
+
+    this.queryHandlers = options?.queryHandlers ?? {};
   }
 
   public async getList<RecordType extends RaRecord = any>(
@@ -56,11 +64,9 @@ export class RPCDataProvider implements DataProvider {
     const countUrl = new URL(`${resource}/count`, this.apiBase);
     const findManyUrl = new URL(`${resource}/findMany`, this.apiBase);
 
-    const qInput: FindManyArgs<SchemaType, GetModels<SchemaType>> = {};
-    if (params.filter && Object.keys(params.filter).length > 0) {
-      console.log({ filter: params.filter });
-      qInput.where = {};
-    }
+    const qInput: FindManyArgs<SchemaType, GetModels<SchemaType>> = {
+      where: resolveWhereInput(resource, params.filter, this.queryHandlers),
+    };
     if (params.sort) {
       qInput.orderBy = {
         [params.sort.field]: params.sort.order.toLowerCase(),

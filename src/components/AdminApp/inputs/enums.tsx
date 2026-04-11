@@ -1,4 +1,4 @@
-import type { Role, TripRole } from "@zenstack/models";
+import type { Role, TripGroupRole, TripRole } from "@zenstack/models";
 import { SelectInput, type SelectInputProps } from "react-admin";
 
 interface SelectOption<T> {
@@ -19,6 +19,12 @@ export const RoleInput = createEnumSelect<Role>([
 
 export const TripRoleInput = createEnumSelect<TripRole>([
   { id: "SPECTATOR", name: "Spectator" },
+  { id: "VIEWER", name: "Viewer" },
+  { id: "CONTRIBUTOR", name: "Contributor" },
+  { id: "OWNER", name: "Owner" },
+]);
+
+export const TripGroupRoleInput = createEnumSelect<TripGroupRole>([
   { id: "VIEWER", name: "Viewer" },
   { id: "CONTRIBUTOR", name: "Contributor" },
   { id: "OWNER", name: "Owner" },

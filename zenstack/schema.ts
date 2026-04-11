@@ -398,7 +398,8 @@ export class SchemaType implements SchemaDef {
                     name: "id",
                     type: "String",
                     id: true,
-                    attributes: [{ name: "@id" }] as readonly AttributeApplication[]
+                    attributes: [{ name: "@id" }, { name: "@default", args: [{ name: "value", value: ExpressionUtils.call("cuid") }] }] as readonly AttributeApplication[],
+                    default: ExpressionUtils.call("cuid") as FieldDefault
                 },
                 name: {
                     name: "name",
@@ -437,6 +438,10 @@ export class SchemaType implements SchemaDef {
         TripGroupUser: {
             name: "TripGroupUser",
             fields: {
+                role: {
+                    name: "role",
+                    type: "TripGroupRole"
+                },
                 tripId: {
                     name: "tripId",
                     type: "String",
@@ -541,7 +546,8 @@ export class SchemaType implements SchemaDef {
                     name: "id",
                     type: "String",
                     id: true,
-                    attributes: [{ name: "@id" }] as readonly AttributeApplication[]
+                    attributes: [{ name: "@id" }, { name: "@default", args: [{ name: "value", value: ExpressionUtils.call("cuid") }] }] as readonly AttributeApplication[],
+                    default: ExpressionUtils.call("cuid") as FieldDefault
                 },
                 name: {
                     name: "name",
@@ -650,7 +656,8 @@ export class SchemaType implements SchemaDef {
                     name: "id",
                     type: "String",
                     id: true,
-                    attributes: [{ name: "@id" }] as readonly AttributeApplication[]
+                    attributes: [{ name: "@id" }, { name: "@default", args: [{ name: "value", value: ExpressionUtils.call("cuid") }] }] as readonly AttributeApplication[],
+                    default: ExpressionUtils.call("cuid") as FieldDefault
                 },
                 name: {
                     name: "name",
