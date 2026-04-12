@@ -1,6 +1,6 @@
 import { Create, SimpleForm, TextInput } from "react-admin";
 
-import { RoleInput } from "../../inputs/enums";
+import { RoleInput } from "@/components/Inputs/enums";
 
 export function UserCreate() {
   return (

@@ -27,7 +27,7 @@ export function AppNavbar() {
   const userRole = session.data.user.role as Role;
 
   return (
-    <AppBar>
+    <AppBar position="static">
       <Container maxWidth="xl">
         <Toolbar disableGutters>
           <Typography sx={{ flexGrow: 1 }}>Trip Planner</Typography>

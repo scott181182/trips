@@ -1,6 +1,6 @@
 import { ArrayInput, Create, ReferenceInput, SimpleForm, SimpleFormIterator, TextInput } from "react-admin";
 
-import { TripGroupRoleInput } from "../../inputs/enums";
+import { TripGroupRoleInput } from "@/components/Inputs/enums";
 import { transform } from "./mutation";
 
 export function TripGroupCreate() {

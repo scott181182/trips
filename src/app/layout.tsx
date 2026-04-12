@@ -2,6 +2,7 @@ import { CssBaseline, ThemeProvider } from "@mui/material";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
 import type { PropsWithChildren } from "react";
 
+import { QueryContext } from "@/contexts/query";
 import { theme } from "@/theme";
 
 export default function RootLayout({ children }: PropsWithChildren) {
@@ -22,7 +23,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
         <AppRouterCacheProvider>
           <ThemeProvider theme={theme}>
             <CssBaseline />
-            {children}
+            <QueryContext>{children}</QueryContext>
           </ThemeProvider>
         </AppRouterCacheProvider>
       </body>

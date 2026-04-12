@@ -33,15 +33,29 @@ import { type QueryHandlers, resolveWhereInput } from "./filter";
 import { countDataSchema } from "./schemas";
 import { fetchWithParams } from "./utils";
 
-export interface RPCDataProviderOptions {
-  queryHandlers?: QueryHandlers;
+const KNOWN_META_KEYS = ["include", "select"];
+function applyMetaParams(qInput: Record<string, unknown>, meta: any) {
+  if (!meta) {
+    return;
+  }
+
+  for (const knownKey of KNOWN_META_KEYS) {
+    if (knownKey in meta) {
+      qInput[knownKey] = meta[knownKey];
+    }
+  }
 }
 
+export interface RPCDataProviderOptions {
+  queryHandlers?: QueryHandlers;
+  idMap?: Record<string, string | ((data: any) => string)>;
+}
 export class RPCDataProvider implements DataProvider {
   public readonly supportAbortSignal = true;
 
   private readonly apiBase: URL;
   private readonly queryHandlers: QueryHandlers;
+  private readonly idMap: Record<string, string | ((data: any) => string)>;
 
   public constructor(apiBase: string, options?: RPCDataProviderOptions) {
     if (!apiBase.endsWith("/")) {
@@ -55,6 +69,31 @@ export class RPCDataProvider implements DataProvider {
     }
 
     this.queryHandlers = options?.queryHandlers ?? {};
+    this.idMap = options?.idMap ?? {};
+  }
+
+  private applyId(resource: string, item: any) {
+    if (!(resource in this.idMap)) {
+      return;
+    }
+
+    if (typeof this.idMap[resource] === "string") {
+      const idField = this.idMap[resource];
+      item.id = item[idField];
+    } else {
+      // Function to generate a custom ID.
+      const idFn = this.idMap[resource];
+      item.id = idFn(item);
+    }
+  }
+  private applyIds(resource: string, items: any[]) {
+    if (!(resource in this.idMap)) {
+      return;
+    }
+
+    items.forEach((it) => {
+      this.applyId(resource, it);
+    });
   }
 
   public async getList<RecordType extends RaRecord = any>(
@@ -75,17 +114,19 @@ export class RPCDataProvider implements DataProvider {
 
     const countDataPromise = fetchWithParams(countUrl, qInput, { schema: countDataSchema, signal: params.signal });
 
+    applyMetaParams(qInput, params.meta);
     if (params.pagination) {
       qInput.skip = (params.pagination.page - 1) * params.pagination.perPage;
       qInput.take = params.pagination.perPage;
     }
-    const findManyDataPromise = fetchWithParams(findManyUrl, qInput, { signal: params.signal });
+    const findManyDataPromise = fetchWithParams<RecordType[]>(findManyUrl, qInput, { signal: params.signal });
 
     const [countData, findManyData] = await Promise.all([countDataPromise, findManyDataPromise]);
+    this.applyIds(resource, findManyData);
 
     return {
       total: countData,
-      data: findManyData as RecordType[],
+      data: findManyData,
     };
   }
 
@@ -95,22 +136,19 @@ export class RPCDataProvider implements DataProvider {
   ): Promise<GetOneResult<RecordType>> {
     const findFirstUrl = new URL(`${resource}/findFirst`, this.apiBase);
 
-    console.log({ getOne: params });
-
     const qInput: FindFirstArgs<SchemaType, GetModels<SchemaType>> = {
       where: {
         // @ts-expect-error
         id: { equals: params.id },
       },
     };
-    if (params.meta?.include) {
-      (qInput as any).include = params.meta.include;
-    }
+    applyMetaParams(qInput, params.meta);
 
     const findFirstData = await fetchWithParams(findFirstUrl, qInput, { signal: params.signal });
     if (!findFirstData) {
       throw new Error(`Could not find '${resource}' with id '${params.id}'`);
     }
+    this.applyId(resource, findFirstData);
 
     return {
       data: findFirstData as RecordType,
@@ -143,7 +181,9 @@ export class RPCDataProvider implements DataProvider {
       },
       data: params.data,
     };
+    applyMetaParams(qInput, params.meta);
     const updateData = await fetchWithParams(updateUrl, qInput, { method: "PUT" });
+    this.applyId(resource, updateData);
 
     return {
       data: updateData as RecordType,
@@ -165,7 +205,9 @@ export class RPCDataProvider implements DataProvider {
     const qInput: CreateArgs<SchemaType, GetModels<SchemaType>> = {
       data: params.data,
     };
+    applyMetaParams(qInput, params.meta);
     const createData = await fetchWithParams(createUrl, qInput, { method: "POST" });
+    this.applyId(resource, createData);
 
     return {
       data: createData as ResultRecordType,

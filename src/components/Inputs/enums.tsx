@@ -1,4 +1,4 @@
-import type { Role, TripGroupRole, TripRole } from "@zenstack/models";
+import type { Role, RsvpStatus, TripGroupRole, TripRole } from "@zenstack/models";
 import { SelectInput, type SelectInputProps } from "react-admin";
 
 interface SelectOption<T> {
@@ -28,4 +28,10 @@ export const TripGroupRoleInput = createEnumSelect<TripGroupRole>([
   { id: "VIEWER", name: "Viewer" },
   { id: "CONTRIBUTOR", name: "Contributor" },
   { id: "OWNER", name: "Owner" },
+]);
+
+export const RsvpInput = createEnumSelect<RsvpStatus>([
+  { id: "ACCEPTED", name: "Accepted" },
+  { id: "MAYBE", name: "Maybe" },
+  { id: "DECLINED", name: "Declined" },
 ]);
