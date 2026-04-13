@@ -1,13 +1,14 @@
+import { timeZonesNames } from "@vvo/tzdb";
 import type { Role, RsvpStatus, TripGroupRole, TripRole } from "@zenstack/models";
-import { SelectInput, type SelectInputProps } from "react-admin";
+import { AutocompleteInput, type AutocompleteInputProps } from "react-admin";
 
 interface SelectOption<T> {
   id: T;
   name: string;
 }
 function createEnumSelect<T extends string>(choices: SelectOption<T>[]) {
-  return function EnumInput(props: SelectInputProps) {
-    return <SelectInput {...props} choices={choices} />;
+  return function EnumInput(props: AutocompleteInputProps) {
+    return <AutocompleteInput {...props} choices={choices} />;
   };
 }
 
@@ -35,3 +36,10 @@ export const RsvpInput = createEnumSelect<RsvpStatus>([
   { id: "MAYBE", name: "Maybe" },
   { id: "DECLINED", name: "Declined" },
 ]);
+
+export const TimeZoneInput = createEnumSelect(
+  timeZonesNames.map((tz) => ({
+    id: tz,
+    name: tz,
+  })),
+);

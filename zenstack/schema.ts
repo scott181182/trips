@@ -307,6 +307,25 @@ export class SchemaType implements SchemaDef {
                     name: "name",
                     type: "String"
                 },
+                defaultTimeZone: {
+                    name: "defaultTimeZone",
+                    type: "String"
+                },
+                locationId: {
+                    name: "locationId",
+                    type: "String",
+                    optional: true,
+                    foreignKeyFor: [
+                        "location"
+                    ] as readonly string[]
+                },
+                location: {
+                    name: "location",
+                    type: "Location",
+                    optional: true,
+                    attributes: [{ name: "@relation", args: [{ name: "fields", value: ExpressionUtils.array("String", [ExpressionUtils.field("locationId")]) }, { name: "references", value: ExpressionUtils.array("String", [ExpressionUtils.field("id")]) }] }] as readonly AttributeApplication[],
+                    relation: { opposite: "trip", fields: ["locationId"], references: ["id"] }
+                },
                 users: {
                     name: "users",
                     type: "TripUser",
@@ -340,9 +359,97 @@ export class SchemaType implements SchemaDef {
                 id: { type: "String" }
             }
         },
+        Location: {
+            name: "Location",
+            fields: {
+                id: {
+                    name: "id",
+                    type: "String",
+                    id: true,
+                    attributes: [{ name: "@id" }, { name: "@default", args: [{ name: "value", value: ExpressionUtils.call("cuid") }] }] as readonly AttributeApplication[],
+                    default: ExpressionUtils.call("cuid") as FieldDefault
+                },
+                name: {
+                    name: "name",
+                    type: "String",
+                    unique: true,
+                    attributes: [{ name: "@unique" }] as readonly AttributeApplication[]
+                },
+                timeZone: {
+                    name: "timeZone",
+                    type: "String"
+                },
+                parentId: {
+                    name: "parentId",
+                    type: "String",
+                    optional: true,
+                    foreignKeyFor: [
+                        "parent"
+                    ] as readonly string[]
+                },
+                parent: {
+                    name: "parent",
+                    type: "Location",
+                    optional: true,
+                    attributes: [{ name: "@relation", args: [{ name: "name", value: ExpressionUtils.literal("ParentLocation") }, { name: "fields", value: ExpressionUtils.array("String", [ExpressionUtils.field("parentId")]) }, { name: "references", value: ExpressionUtils.array("String", [ExpressionUtils.field("id")]) }] }] as readonly AttributeApplication[],
+                    relation: { opposite: "children", name: "ParentLocation", fields: ["parentId"], references: ["id"] }
+                },
+                children: {
+                    name: "children",
+                    type: "Location",
+                    array: true,
+                    attributes: [{ name: "@relation", args: [{ name: "name", value: ExpressionUtils.literal("ParentLocation") }] }] as readonly AttributeApplication[],
+                    relation: { opposite: "parent", name: "ParentLocation" }
+                },
+                startUsers: {
+                    name: "startUsers",
+                    type: "TripUser",
+                    array: true,
+                    attributes: [{ name: "@relation", args: [{ name: "name", value: ExpressionUtils.literal("StartLocation") }] }] as readonly AttributeApplication[],
+                    relation: { opposite: "startLocation", name: "StartLocation" }
+                },
+                endUsers: {
+                    name: "endUsers",
+                    type: "TripUser",
+                    array: true,
+                    attributes: [{ name: "@relation", args: [{ name: "name", value: ExpressionUtils.literal("EndLocation") }] }] as readonly AttributeApplication[],
+                    relation: { opposite: "endLocation", name: "EndLocation" }
+                },
+                trip: {
+                    name: "trip",
+                    type: "Trip",
+                    array: true,
+                    relation: { opposite: "location" }
+                },
+                tripLegs: {
+                    name: "tripLegs",
+                    type: "TripLeg",
+                    array: true,
+                    relation: { opposite: "location" }
+                },
+                excursions: {
+                    name: "excursions",
+                    type: "Excursion",
+                    array: true,
+                    relation: { opposite: "location" }
+                }
+            },
+            attributes: [
+                { name: "@@map", args: [{ name: "name", value: ExpressionUtils.literal("location") }] }
+            ] as readonly AttributeApplication[],
+            idFields: ["id"],
+            uniqueFields: {
+                id: { type: "String" },
+                name: { type: "String" }
+            }
+        },
         TripUser: {
             name: "TripUser",
             fields: {
+                role: {
+                    name: "role",
+                    type: "TripRole"
+                },
                 tripId: {
                     name: "tripId",
                     type: "String",
@@ -350,6 +457,12 @@ export class SchemaType implements SchemaDef {
                     foreignKeyFor: [
                         "trip"
                     ] as readonly string[]
+                },
+                trip: {
+                    name: "trip",
+                    type: "Trip",
+                    attributes: [{ name: "@relation", args: [{ name: "fields", value: ExpressionUtils.array("String", [ExpressionUtils.field("tripId")]) }, { name: "references", value: ExpressionUtils.array("String", [ExpressionUtils.field("id")]) }, { name: "onDelete", value: ExpressionUtils.literal("Cascade") }, { name: "onUpdate", value: ExpressionUtils.literal("Cascade") }] }] as readonly AttributeApplication[],
+                    relation: { opposite: "users", fields: ["tripId"], references: ["id"], onDelete: "Cascade", onUpdate: "Cascade" }
                 },
                 userId: {
                     name: "userId",
@@ -359,21 +472,41 @@ export class SchemaType implements SchemaDef {
                         "user"
                     ] as readonly string[]
                 },
-                role: {
-                    name: "role",
-                    type: "TripRole"
-                },
-                trip: {
-                    name: "trip",
-                    type: "Trip",
-                    attributes: [{ name: "@relation", args: [{ name: "fields", value: ExpressionUtils.array("String", [ExpressionUtils.field("tripId")]) }, { name: "references", value: ExpressionUtils.array("String", [ExpressionUtils.field("id")]) }, { name: "onDelete", value: ExpressionUtils.literal("Cascade") }, { name: "onUpdate", value: ExpressionUtils.literal("Cascade") }] }] as readonly AttributeApplication[],
-                    relation: { opposite: "users", fields: ["tripId"], references: ["id"], onDelete: "Cascade", onUpdate: "Cascade" }
-                },
                 user: {
                     name: "user",
                     type: "User",
                     attributes: [{ name: "@relation", args: [{ name: "fields", value: ExpressionUtils.array("String", [ExpressionUtils.field("userId")]) }, { name: "references", value: ExpressionUtils.array("String", [ExpressionUtils.field("id")]) }, { name: "onDelete", value: ExpressionUtils.literal("Cascade") }, { name: "onUpdate", value: ExpressionUtils.literal("Cascade") }] }] as readonly AttributeApplication[],
                     relation: { opposite: "tripUsers", fields: ["userId"], references: ["id"], onDelete: "Cascade", onUpdate: "Cascade" }
+                },
+                startLocationId: {
+                    name: "startLocationId",
+                    type: "String",
+                    optional: true,
+                    foreignKeyFor: [
+                        "startLocation"
+                    ] as readonly string[]
+                },
+                startLocation: {
+                    name: "startLocation",
+                    type: "Location",
+                    optional: true,
+                    attributes: [{ name: "@relation", args: [{ name: "name", value: ExpressionUtils.literal("StartLocation") }, { name: "fields", value: ExpressionUtils.array("String", [ExpressionUtils.field("startLocationId")]) }, { name: "references", value: ExpressionUtils.array("String", [ExpressionUtils.field("id")]) }] }] as readonly AttributeApplication[],
+                    relation: { opposite: "startUsers", name: "StartLocation", fields: ["startLocationId"], references: ["id"] }
+                },
+                endLocationId: {
+                    name: "endLocationId",
+                    type: "String",
+                    optional: true,
+                    foreignKeyFor: [
+                        "endLocation"
+                    ] as readonly string[]
+                },
+                endLocation: {
+                    name: "endLocation",
+                    type: "Location",
+                    optional: true,
+                    attributes: [{ name: "@relation", args: [{ name: "name", value: ExpressionUtils.literal("EndLocation") }, { name: "fields", value: ExpressionUtils.array("String", [ExpressionUtils.field("endLocationId")]) }, { name: "references", value: ExpressionUtils.array("String", [ExpressionUtils.field("id")]) }] }] as readonly AttributeApplication[],
+                    relation: { opposite: "endUsers", name: "EndLocation", fields: ["endLocationId"], references: ["id"] }
                 },
                 groups: {
                     name: "groups",
@@ -553,6 +686,10 @@ export class SchemaType implements SchemaDef {
                     name: "name",
                     type: "String"
                 },
+                timeZone: {
+                    name: "timeZone",
+                    type: "String"
+                },
                 startTime: {
                     name: "startTime",
                     type: "DateTime"
@@ -573,6 +710,21 @@ export class SchemaType implements SchemaDef {
                     type: "Trip",
                     attributes: [{ name: "@relation", args: [{ name: "fields", value: ExpressionUtils.array("String", [ExpressionUtils.field("tripId")]) }, { name: "references", value: ExpressionUtils.array("String", [ExpressionUtils.field("id")]) }, { name: "onDelete", value: ExpressionUtils.literal("Cascade") }, { name: "onUpdate", value: ExpressionUtils.literal("Cascade") }] }] as readonly AttributeApplication[],
                     relation: { opposite: "legs", fields: ["tripId"], references: ["id"], onDelete: "Cascade", onUpdate: "Cascade" }
+                },
+                locationId: {
+                    name: "locationId",
+                    type: "String",
+                    optional: true,
+                    foreignKeyFor: [
+                        "location"
+                    ] as readonly string[]
+                },
+                location: {
+                    name: "location",
+                    type: "Location",
+                    optional: true,
+                    attributes: [{ name: "@relation", args: [{ name: "fields", value: ExpressionUtils.array("String", [ExpressionUtils.field("locationId")]) }, { name: "references", value: ExpressionUtils.array("String", [ExpressionUtils.field("id")]) }] }] as readonly AttributeApplication[],
+                    relation: { opposite: "tripLegs", fields: ["locationId"], references: ["id"] }
                 },
                 excursions: {
                     name: "excursions",
@@ -663,6 +815,10 @@ export class SchemaType implements SchemaDef {
                     name: "name",
                     type: "String"
                 },
+                timeZone: {
+                    name: "timeZone",
+                    type: "String"
+                },
                 startTime: {
                     name: "startTime",
                     type: "DateTime"
@@ -699,6 +855,21 @@ export class SchemaType implements SchemaDef {
                     optional: true,
                     attributes: [{ name: "@relation", args: [{ name: "fields", value: ExpressionUtils.array("String", [ExpressionUtils.field("tripId"), ExpressionUtils.field("tripLegId")]) }, { name: "references", value: ExpressionUtils.array("String", [ExpressionUtils.field("tripId"), ExpressionUtils.field("id")]) }, { name: "onDelete", value: ExpressionUtils.literal("Cascade") }, { name: "onUpdate", value: ExpressionUtils.literal("Cascade") }] }] as readonly AttributeApplication[],
                     relation: { opposite: "excursions", fields: ["tripId", "tripLegId"], references: ["tripId", "id"], onDelete: "Cascade", onUpdate: "Cascade" }
+                },
+                locationId: {
+                    name: "locationId",
+                    type: "String",
+                    optional: true,
+                    foreignKeyFor: [
+                        "location"
+                    ] as readonly string[]
+                },
+                location: {
+                    name: "location",
+                    type: "Location",
+                    optional: true,
+                    attributes: [{ name: "@relation", args: [{ name: "fields", value: ExpressionUtils.array("String", [ExpressionUtils.field("locationId")]) }, { name: "references", value: ExpressionUtils.array("String", [ExpressionUtils.field("id")]) }] }] as readonly AttributeApplication[],
+                    relation: { opposite: "excursions", fields: ["locationId"], references: ["id"] }
                 },
                 rsvps: {
                     name: "rsvps",

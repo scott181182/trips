@@ -15,6 +15,7 @@ export type Session = $ModelResult<$Schema, "Session">;
 export type Account = $ModelResult<$Schema, "Account">;
 export type Verification = $ModelResult<$Schema, "Verification">;
 export type Trip = $ModelResult<$Schema, "Trip">;
+export type Location = $ModelResult<$Schema, "Location">;
 export type TripUser = $ModelResult<$Schema, "TripUser">;
 export type TripGroup = $ModelResult<$Schema, "TripGroup">;
 export type TripGroupUser = $ModelResult<$Schema, "TripGroupUser">;

@@ -2,7 +2,7 @@
 "use client";
 
 import type { SchemaType } from "@zenstack/schema";
-import type { CreateArgs, FindFirstArgs, FindManyArgs, UpdateArgs } from "@zenstackhq/orm";
+import type { CreateArgs, DeleteManyArgs, FindFirstArgs, FindManyArgs, UpdateArgs } from "@zenstackhq/orm";
 import type { GetModels } from "@zenstackhq/schema";
 import type {
   CreateParams,
@@ -213,6 +213,7 @@ export class RPCDataProvider implements DataProvider {
       data: createData as ResultRecordType,
     };
   }
+
   public async delete<RecordType extends RaRecord = any>(
     resource: string,
     params: DeleteParams<RecordType>,
@@ -220,11 +221,23 @@ export class RPCDataProvider implements DataProvider {
     console.warn("delete not yet implement", { resource, params });
     throw new Error("Not yet implemented: delete");
   }
+
   public async deleteMany<RecordType extends RaRecord = any>(
     resource: string,
     params: DeleteManyParams<RecordType>,
   ): Promise<DeleteManyResult<RecordType>> {
-    console.warn("deleteMany not yet implement", { resource, params });
-    throw new Error("Not yet implemented: deleteMany");
+    const deleteUrl = new URL(`${resource}/deleteMany`, this.apiBase);
+
+    const qInput: DeleteManyArgs<SchemaType, GetModels<SchemaType>> = {
+      where: {
+        // @ts-expect-error
+        id: { in: params.ids },
+      },
+    };
+    applyMetaParams(qInput, params.meta);
+    // We could get `count` out of this, but React Admin only cares about a list of IDs
+    const _deleteData = await fetchWithParams(deleteUrl, qInput, { method: "DELETE" });
+
+    return { data: params.ids };
   }
 }

@@ -6,6 +6,7 @@ export function TripList() {
       <DataTable>
         <DataTable.Col source="id" />
         <DataTable.Col source="name" />
+        <DataTable.Col source="defaultTimeZone" />
       </DataTable>
     </List>
   );

@@ -9,25 +9,60 @@ enum TripRole {
   @@map('trip_role')
 }
 model Trip {
-  id         String      @id
-  name       String
+  id              String      @id
+  name            String
+  /// The default timezone for datetimes on this trip.
+  /// Related records can often override this with their own.
+  defaultTimeZone String
 
-  users      TripUser[]
-  groups     TripGroup[]
-  legs       TripLeg[]
-  excursions Excursion[]
+  locationId      String?
+  /// The location of the trip, if it's in one principal location.
+  location        Location?   @relation(fields: [locationId], references: [id])
+
+  users           TripUser[]
+  groups          TripGroup[]
+  legs            TripLeg[]
+  excursions      Excursion[]
 
   @@map('trip')
 }
+model Location {
+  id         String      @id @default(cuid())
+  name       String      @unique
+  /// The time zone for this location.
+  timeZone   String
+
+  parentId   String?
+  // The parent/containing location to this one.
+  parent     Location?   @relation("ParentLocation", fields: [parentId], references: [id])
+
+  // Any subsidiary locations to this one.
+  children   Location[]  @relation("ParentLocation")
+  startUsers TripUser[]  @relation("StartLocation")
+  endUsers   TripUser[]  @relation("EndLocation")
+  trip       Trip[]
+  tripLegs   TripLeg[]
+  excursions Excursion[]
+
+  @@map('location')
+}
+
+
 model TripUser {
-  tripId String
-  userId String
-  role   TripRole
+  role            TripRole
 
-  trip   Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  user   User            @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tripId          String
+  trip            Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  userId          String
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  startLocationId String?
+  /// The location that this user will be at before the trip starts.
+  startLocation   Location?       @relation("StartLocation", fields: [startLocationId], references: [id])
+  endLocationId   String?
+  /// The location that this user will be at after the trip ends.
+  endLocation     Location?       @relation("EndLocation", fields: [endLocationId], references: [id])
 
-  groups TripGroupUser[]
+  groups          TripGroupUser[]
 
   @@id([tripId, userId])
   @@map('trip_user')
@@ -90,11 +125,16 @@ model TripLegRsvp {
 model TripLeg {
   id         String        @id @default(cuid())
   name       String
+  /// A specific time zone to use when displaying this leg's datetimes.
+  timeZone   String
   startTime  DateTime
   endTime    DateTime
 
   tripId     String
   trip       Trip          @relation(fields: [tripId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  locationId String?
+  /// The location for this leg of a trip, if it's in a specific location.
+  location   Location?     @relation(fields: [locationId], references: [id])
 
   excursions Excursion[]
   rsvps      TripLegRsvp[]
@@ -120,17 +160,22 @@ model ExcursionRsvp {
 
 // A specific activity or event during a trip, like a tour, museum visit, or planned meal.
 model Excursion {
-  id        String          @id @default(cuid())
-  name      String
-  startTime DateTime
-  endTime   DateTime
+  id         String          @id @default(cuid())
+  name       String
+  /// A specific time zone to use when displaying this excursion's datetimes.
+  timeZone   String
+  startTime  DateTime
+  endTime    DateTime
 
-  tripId    String
-  trip      Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  tripLegId String?
-  tripLeg   TripLeg?        @relation(fields: [tripId, tripLegId], references: [tripId, id], onDelete: Cascade, onUpdate: Cascade)
+  tripId     String
+  trip       Trip            @relation(fields: [tripId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  tripLegId  String?
+  tripLeg    TripLeg?        @relation(fields: [tripId, tripLegId], references: [tripId, id], onDelete: Cascade, onUpdate: Cascade)
+  locationId String?
+  /// The location for this excursion, if it's in a specific location.
+  location   Location?       @relation(fields: [locationId], references: [id])
 
-  rsvps     ExcursionRsvp[]
+  rsvps      ExcursionRsvp[]
 
   @@map('excursion')
 }
