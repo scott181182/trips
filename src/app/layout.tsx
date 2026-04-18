@@ -4,6 +4,7 @@ import type { PropsWithChildren } from "react";
 
 import { QueryContext } from "@/contexts/query";
 import { theme } from "@/theme";
+import "./globals.css";
 
 export default function RootLayout({ children }: PropsWithChildren) {
   return (
@@ -20,7 +21,7 @@ export default function RootLayout({ children }: PropsWithChildren) {
         />
       </head>
       <body>
-        <AppRouterCacheProvider>
+        <AppRouterCacheProvider options={{ enableCssLayer: true }}>
           <ThemeProvider theme={theme}>
             <CssBaseline />
             <QueryContext>{children}</QueryContext>

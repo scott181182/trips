@@ -1,9 +1,10 @@
-import { Stack, Typography } from "@mui/material";
+import { Stack } from "@mui/material";
 import { useQuery } from "@tanstack/react-query";
 import type { TripLeg } from "@zenstack/models";
 
 import { dataProvider } from "@/lib/dataProvider";
 import { AsyncData } from "../AsyncData";
+import { TripLegRow } from "./TripLegRow";
 
 export interface TripLegsProps {
   tripId: string;
@@ -17,12 +18,12 @@ export function TripLegs({ tripId }: Readonly<TripLegsProps>) {
   return (
     <AsyncData data={data} loading={isLoading} error={error}>
       {(data) => (
-        <Stack>
-          {data.data.map((leg: TripLeg) => (
-            <div key={leg.id}>
-              <Typography variant="h3">{leg.name}</Typography>
-            </div>
-          ))}
+        <Stack spacing={2} direction="column">
+          {data.data
+            .toSorted((a, b) => a.startTime.getTime() - b.startTime.getTime())
+            .map((leg: TripLeg) => (
+              <TripLegRow key={leg.id} tripLeg={leg} />
+            ))}
         </Stack>
       )}
     </AsyncData>

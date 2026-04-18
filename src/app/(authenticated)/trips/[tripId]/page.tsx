@@ -9,7 +9,7 @@ export default function TripPage() {
   const { trip } = useTripStore();
 
   return (
-    <Container sx={{ pt: 2 }}>
+    <Container sx={{ pt: 2, pb: 4 }}>
       <Typography variant="h1">{trip.name}</Typography>
       <Stack direction="column" spacing={2}>
         <Typography variant="h2">Legs</Typography>

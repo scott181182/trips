@@ -5,8 +5,8 @@ import type { Role } from "@zenstack/models";
 import Link from "next/link";
 import { useCallback, useState } from "react";
 
+import { ProfileIcon } from "@/components/ProfileIcon";
 import { authClient } from "@/lib/auth/client";
-import { ProfileIcon } from "./ProfileIcon";
 
 export function AppNavbar() {
   const session = authClient.useSession();
@@ -32,7 +32,7 @@ export function AppNavbar() {
         <Toolbar disableGutters>
           <Typography sx={{ flexGrow: 1 }}>Trip Planner</Typography>
           <IconButton onClick={(ev) => setAnchorElProfile(ev.currentTarget)}>
-            <ProfileIcon />
+            <ProfileIcon user={session.data.user} />
           </IconButton>
           <Menu anchorEl={anchorElProfile} open={Boolean(anchorElProfile)} onClose={handleMenuClose}>
             {userRole === "ADMIN" && (
