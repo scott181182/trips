@@ -1,0 +1,15 @@
+.routePath {
+  stroke-width: 4px;
+
+  &:hover {
+    stroke-width: 6px;
+  }
+}
+
+.tooltip {
+  position: absolute;
+  background-color: white;
+  border: 1px solid black;
+  padding: 5px;
+  pointer-events: none;
+}

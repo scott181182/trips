@@ -1,0 +1,11 @@
+.legBox {
+  &>rect {
+    stroke-width: 1px;
+    fill-opacity: 30%;
+  }
+
+  &:hover>rect {
+    stroke-width: 2px;
+    fill-opacity: 50%;
+  }
+}

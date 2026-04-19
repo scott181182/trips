@@ -1,5 +1,6 @@
 import { group } from "radashi";
 
+import { clusterData, flattenCluster } from "@/utils/clustering";
 import type { NarrativeCharacter, NarrativeLocation } from ".";
 
 export interface RouteLeg {
@@ -43,7 +44,7 @@ export function calculateRoutes(characters: NarrativeCharacter[], locations: Nar
     locations: c.stays.map((s) => s.location),
   }));
 
-  const sortedCharacters = characters.toSorted((a, b) => {
+  const alphabetizedCharacters = characters.toSorted((a, b) => {
     if (!a.startLocation) return 1;
     if (!b.startLocation) return -1;
 
@@ -53,6 +54,9 @@ export function calculateRoutes(characters: NarrativeCharacter[], locations: Nar
       return startLocations.indexOf(a.startLocation) - startLocations.indexOf(b.startLocation);
     }
   });
+  const sortedCharacters = clusterOrder(
+    alphabetizedCharacters.map((c) => ({ id: c.id, path: c.stays.map((s) => s.location) })),
+  ).map((ordered) => alphabetizedCharacters.find((c) => c.id === ordered.id)!);
 
   const legStayMap = group(
     sortedCharacters.flatMap((c) => c.stays),
@@ -113,5 +117,19 @@ function clusterOrder<T extends { id: string; path: string[] }>(items: T[]): T[]
     return items;
   }
 
-  const allSimilarities = items.map((a) => items.map((b) => pathSimilarity(a.path, b.path)));
+  const distanceMatrix = items.map((a) =>
+    items.map((b) => {
+      const similarity = pathSimilarity(a.path, b.path);
+      const distance = 1 - similarity;
+      return distance;
+    }),
+  );
+
+  const cluster = clusterData(
+    items.map((it) => it.id),
+    distanceMatrix,
+  );
+  console.log({ items, cluster });
+  const flattenedIndexes = flattenCluster(cluster, distanceMatrix);
+  return flattenedIndexes.map((i) => items[i]);
 }

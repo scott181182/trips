@@ -1,8 +1,11 @@
+import clsx from "clsx";
 import * as d3 from "d3";
 import { type RefObject, useMemo, useRef } from "react";
 import { useResizeObserver } from "usehooks-ts";
 
 import { useSvgPanZoom } from "@/utils/svg";
+import cls from "./index.module.css";
+import { LegBox } from "./LegBox";
 import { calculateRoutes } from "./utils";
 
 export interface NarrativeStay {
@@ -28,6 +31,7 @@ const CHART_TOP_MARGIN = 30;
 const CHART_BOTTOM_MARGIN = 30;
 const CHART_LEFT_MARGIN = 150;
 const CHART_RIGHT_MARGIN = 30;
+const BEZIER_CONTROL_OFFSET = 50;
 
 export interface NarrativeChartOptions {
   characters: NarrativeCharacter[];
@@ -77,7 +81,8 @@ export function NarrativeChart({ characters, locations, className }: Readonly<Na
   });
 
   return (
-    <div ref={containerRef} className={className}>
+    <div ref={containerRef} className={clsx(className, "relative")}>
+      {/*<div className={cls.tooltip}>Test Text</div>*/}
       <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} ref={svgRef}>
         <title>Narrative Chart</title>
         <g transform={zoomTransform}>
@@ -107,19 +112,7 @@ export function NarrativeChart({ characters, locations, className }: Readonly<Na
           </g>
           <g transform={`translate(0,${CHART_TOP_MARGIN})`}>
             {legs.map((l) => (
-              <g key={l.id}>
-                <rect
-                  x={timeScale(l.start)}
-                  width={timeScale(l.end) - timeScale(l.start)}
-                  y="5"
-                  height={20 + 10 * l.characters.length}
-                  fill={locationColor(l.location)}
-                  fillOpacity="0.3"
-                  stroke={locationColor(l.location)}
-                  rx="5"
-                  ry="5"
-                ></rect>
-              </g>
+              <LegBox key={l.id} leg={l} timeScale={timeScale} locationColor={locationColor} />
             ))}
           </g>
           <g>
@@ -127,7 +120,7 @@ export function NarrativeChart({ characters, locations, className }: Readonly<Na
               const startY = (personStartScale(c.name) ?? 0) + personStartScale.bandwidth() / 2;
 
               const legPoints = c.route.flatMap((r) => {
-                const locationY = CHART_TOP_MARGIN + 5;
+                const locationY = CHART_TOP_MARGIN + 5 + 5 + 10;
                 return [
                   { x: timeScale(r.start) ?? 0, y: locationY + 10 + 10 * r.index },
                   { x: timeScale(r.end) ?? 0, y: locationY + 10 + 10 * r.index },
@@ -139,13 +132,19 @@ export function NarrativeChart({ characters, locations, className }: Readonly<Na
               let prevY = startY;
               path.moveTo(prevX, prevY);
               legPoints.forEach((p) => {
-                path.bezierCurveTo(prevX + 10, prevY, p.x - 10, p.y, p.x, p.y);
+                path.bezierCurveTo(prevX + BEZIER_CONTROL_OFFSET, prevY, p.x - BEZIER_CONTROL_OFFSET, p.y, p.x, p.y);
                 prevX = p.x;
                 prevY = p.y;
               });
 
               return (
-                <path key={c.id} stroke={characterColor(c.name)} strokeWidth="4" d={path.toString()} fill="none"></path>
+                <path
+                  key={c.id}
+                  className={cls.routePath}
+                  stroke={characterColor(c.name)}
+                  d={path.toString()}
+                  fill="none"
+                ></path>
               );
             })}
           </g>
