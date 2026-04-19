@@ -7,7 +7,10 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**", "!zenstack/*.ts"]
+    "includes": [
+      "**",
+      "!zenstack/*.ts"
+    ]
   },
   "formatter": {
     "enabled": true,
@@ -20,7 +23,13 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "correctness": {
+        "noUnusedImports": {
+          "level": "warn",
+          "fix": "safe"
+        }
+      }
     },
     "domains": {
       "react": "recommended",
@@ -45,7 +54,16 @@
         "organizeImports": {
           "level": "on",
           "options": {
-            "groups": [[":BUN:", ":NODE:"], ":BLANK_LINE:", ":PACKAGE:", ":BLANK_LINE:", "**"]
+            "groups": [
+              [
+                ":BUN:",
+                ":NODE:"
+              ],
+              ":BLANK_LINE:",
+              ":PACKAGE:",
+              ":BLANK_LINE:",
+              "**"
+            ]
           }
         }
       }

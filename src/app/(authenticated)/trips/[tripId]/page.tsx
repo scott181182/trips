@@ -4,6 +4,7 @@ import { Container, Stack, Typography } from "@mui/material";
 
 import { TripLegs } from "@/components/TripLegs";
 import { useTripStore } from "@/stores/trip/provider";
+import { TripNarrative } from "./TripNarrative";
 
 export default function TripPage() {
   const { trip } = useTripStore();
@@ -12,6 +13,8 @@ export default function TripPage() {
     <Container sx={{ pt: 2, pb: 4 }}>
       <Typography variant="h1">{trip.name}</Typography>
       <Stack direction="column" spacing={2}>
+        <Typography variant="h2">Overview</Typography>
+        <TripNarrative />
         <Typography variant="h2">Legs</Typography>
         <TripLegs tripId={trip.id} />
       </Stack>

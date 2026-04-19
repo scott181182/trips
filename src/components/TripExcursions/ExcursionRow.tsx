@@ -1,7 +1,7 @@
 import { DragDropProvider, type DragEndEvent } from "@dnd-kit/react";
-import { Card, CardActions, CardContent, Collapse, Stack, Typography } from "@mui/material";
+import { Card, CardContent, Typography } from "@mui/material";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import type { RsvpStatus, TripLeg, TripLegRsvp } from "@zenstack/models";
+import type { Excursion, ExcursionRsvp, RsvpStatus, User } from "@zenstack/models";
 import clsx from "clsx";
 import { useCallback, useEffect, useState } from "react";
 
@@ -9,22 +9,23 @@ import { DraggableAvatarGroup } from "@/components/AvatarGroup";
 import { apiClient, dataProvider } from "@/lib/dataProvider";
 import { useTripStore } from "@/stores/trip/provider";
 import { rsvpToAvatarUser } from "@/utils/rsvp";
-import { ExpandButton } from "../ExpandButton";
 import type { AvatarUser } from "../ProfileIcon";
-import { TripExcursions } from "../TripExcursions";
-import cls from "./TripLegRow.module.css";
+import cls from "./ExcursionRow.module.css";
 
-function getUsersToRender(rsvps: (TripLegRsvp & { user: AvatarUser })[], status: RsvpStatus): AvatarUser[] {
+interface ExcursionRsvpWithUser extends ExcursionRsvp {
+  user: User;
+}
+
+function getUsersToRender(rsvps: ExcursionRsvpWithUser[], status: RsvpStatus): AvatarUser[] {
   return rsvps.filter((r) => r.status === status).map((r) => rsvpToAvatarUser(r));
 }
 
-export interface TripLegRowProps {
-  tripLeg: TripLeg;
+export interface ExcursionRowProps {
+  excursion: Excursion;
 }
-export function TripLegRow({ tripLeg }: Readonly<TripLegRowProps>) {
+export function ExcursionRow({ excursion }: Readonly<ExcursionRowProps>) {
   const { tripId, users: tripUsers } = useTripStore();
 
-  const [expanded, setExpanded] = useState(false);
   const [unknown, setUnknown] = useState<AvatarUser[]>(
     tripUsers.map((tu) => ({
       id: tu.user.id,
@@ -37,8 +38,12 @@ export function TripLegRow({ tripLeg }: Readonly<TripLegRowProps>) {
   const [declined, setDeclined] = useState<AvatarUser[]>([]);
 
   const { data: rsvpData } = useQuery({
-    queryKey: ["trips", tripId, "legs", tripLeg.id, "rsvps"],
-    queryFn: () => apiClient.findMany("TripLegRsvp", { where: { tripLegId: tripLeg.id }, include: { user: true } }),
+    queryKey: ["trips", tripId, "excursions", excursion.id, "rsvps"],
+    queryFn: () =>
+      apiClient.findMany("ExcursionRsvp", {
+        where: { excursionId: excursion.id },
+        include: { user: true },
+      }),
   });
   const rsvps = rsvpData || [];
 
@@ -59,26 +64,26 @@ export function TripLegRow({ tripLeg }: Readonly<TripLegRowProps>) {
 
   const createRsvp = useMutation({
     mutationFn: (vars: { userId: string; status: RsvpStatus }) =>
-      dataProvider.create("tripLegRsvp", { data: { tripLegId: tripLeg.id, userId: vars.userId, status: vars.status } }),
+      dataProvider.create("excursionRsvp", {
+        data: { excursionId: excursion.id, userId: vars.userId, status: vars.status },
+      }),
     onSuccess: (_data, _vars, _res, ctx) => {
-      ctx.client.invalidateQueries({ queryKey: ["trips", tripId, "legs", tripLeg.id, "rsvps"] });
+      ctx.client.invalidateQueries({ queryKey: ["trips", tripId, "excursions", excursion.id, "rsvps"] });
     },
   });
   const updateRsvp = useMutation({
     mutationFn: (vars: { userId: string; status: RsvpStatus }) =>
-      apiClient.updateOne("TripLegRsvp", {
-        where: { tripLegId_userId: { tripLegId: tripLeg.id, userId: vars.userId } },
+      apiClient.updateOne("ExcursionRsvp", {
+        where: { excursionId_userId: { excursionId: excursion.id, userId: vars.userId } },
         data: { status: vars.status },
       }),
     onSuccess: (_data, _vars, _res, ctx) => {
-      ctx.client.invalidateQueries({ queryKey: ["trips", tripId, "legs", tripLeg.id, "rsvps"] });
+      ctx.client.invalidateQueries({ queryKey: ["trips", tripId, "excursions", excursion.id, "rsvps"] });
     },
   });
 
   const optimisticMove = useCallback(
     (userId: string, targetStatus: RsvpStatus | "UNKNOWN") => {
-      // Remove user from all lists first.
-      // (brute way of removing it from its current list).
       setUnknown((prev) => prev.filter((u) => u.id !== userId));
       setAccepted((prev) => prev.filter((u) => u.id !== userId));
       setMaybe((prev) => prev.filter((u) => u.id !== userId));
@@ -125,7 +130,6 @@ export function TripLegRow({ tripLeg }: Readonly<TripLegRowProps>) {
       const targetStatus = (target.id as string).split("-", 1)[0] as RsvpStatus | "UNKNOWN";
       optimisticMove(sourceUser.userId, targetStatus);
       if (targetStatus === "UNKNOWN") {
-        // Check if there is an RSVP to delete.
         if (!sourceRsvp) {
           return;
         }
@@ -133,15 +137,12 @@ export function TripLegRow({ tripLeg }: Readonly<TripLegRowProps>) {
         console.log("TODO: delete RSVP");
       } else {
         if (!sourceRsvp) {
-          // No existing RSVP, create a new one.
           createRsvp.mutate({ userId: sourceUser.userId, status: targetStatus });
         } else {
-          // Check for change in status.
           if (targetStatus === sourceRsvp.status) {
             return;
           }
 
-          // Existing RSVP, update it.
           updateRsvp.mutate({ userId: sourceUser.userId, status: targetStatus });
         }
       }
@@ -153,49 +154,33 @@ export function TripLegRow({ tripLeg }: Readonly<TripLegRowProps>) {
     <DragDropProvider onDragEnd={onDragEnd}>
       <Card variant="outlined">
         <CardContent
-          className={clsx(`grid gap-4 pb-0`, cls.tripLegRow, unknown.length > 0 ? "grid-cols-5" : "grid-cols-4")}
+          className={clsx(`grid gap-4`, cls.excursionRow, unknown.length > 0 ? "grid-cols-5" : "grid-cols-4")}
         >
           <div>
-            <Stack spacing={0.5}>
-              <Typography variant="h3">{tripLeg.name}</Typography>
-              <Typography variant="caption" color="textSecondary">
-                {tripLeg.startTime.toLocaleDateString()} - {tripLeg.endTime.toLocaleDateString()}
-              </Typography>
-            </Stack>
+            <Typography variant="h4">{excursion.name}</Typography>
+            <Typography variant="caption" color="textSecondary">
+              {excursion.startTime.toLocaleDateString()} - {excursion.endTime.toLocaleDateString()}
+            </Typography>
           </div>
           <div>
             <Typography variant="caption">Going</Typography>
-            <DraggableAvatarGroup users={accepted} droppableId={`ACCEPTED-${tripLeg.id}`} />
+            <DraggableAvatarGroup users={accepted} droppableId={`ACCEPTED-${excursion.id}`} />
           </div>
           <div>
             <Typography variant="caption">Maybe</Typography>
-            <DraggableAvatarGroup users={maybe} droppableId={`MAYBE-${tripLeg.id}`} />
+            <DraggableAvatarGroup users={maybe} droppableId={`MAYBE-${excursion.id}`} />
           </div>
           <div>
             <Typography variant="caption">Not Going</Typography>
-            <DraggableAvatarGroup users={declined} droppableId={`DECLINED-${tripLeg.id}`} />
+            <DraggableAvatarGroup users={declined} droppableId={`DECLINED-${excursion.id}`} />
           </div>
           {unknown.length > 0 && (
             <div>
               <Typography variant="caption">Unknown</Typography>
-              <DraggableAvatarGroup users={unknown} droppableId={`UNKNOWN-${tripLeg.id}`} />
+              <DraggableAvatarGroup users={unknown} droppableId={`UNKNOWN-${excursion.id}`} />
             </div>
           )}
         </CardContent>
-        <CardActions className="p-0">
-          <ExpandButton
-            aria-expanded={expanded}
-            expanded={expanded}
-            onClick={() => setExpanded((prev) => !prev)}
-            aria-label="show excursions"
-            className="w-full"
-          />
-        </CardActions>
-        <Collapse in={expanded} timeout="auto" unmountOnExit>
-          <CardContent>
-            <TripExcursions tripId={tripId} tripLegId={tripLeg.id} />
-          </CardContent>
-        </Collapse>
       </Card>
     </DragDropProvider>
   );

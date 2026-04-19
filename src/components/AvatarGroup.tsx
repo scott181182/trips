@@ -34,16 +34,15 @@ export function DraggableAvatarGroup({
   className,
   avatarClassName,
 }: Readonly<DraggableAvatarGroupProps>) {
-  const { ref, isDropTarget } = useDroppable({ id: droppableId, type: "group" });
+  const { ref, isDropTarget } = useDroppable({ id: droppableId, accept: "user", type: "group" });
 
   return (
     <div ref={ref} className={clsx("flex gap-1 flex-wrap", className, isDropTarget && "bg-blue-100 rounded-md")}>
       {users.map((user, index) => (
-        <SortableProfileIcon
+        <DraggableProfileIcon
           key={user.id}
           user={user}
           avatarClassName={avatarClassName}
-          index={index}
           group={droppableId}
         />
       ))}

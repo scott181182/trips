@@ -1,5 +1,5 @@
 import type { SchemaType } from "@zenstack/schema";
-import type { SimplifiedPlainResult, UpdateArgs } from "@zenstackhq/orm";
+import type { SimplifiedPlainResult, UpdateArgs, FindUniqueArgs, FindManyArgs } from "@zenstackhq/orm";
 import type { GetModels } from "@zenstackhq/schema";
 import { camel } from "radashi";
 
@@ -20,12 +20,25 @@ export class RpcApiClient {
     }
   }
 
-  async updateOne<M extends GetModels<SchemaType>, T extends UpdateArgs<SchemaType, M>>(model: M, args: T) {
+  private async fetchRpc<M extends GetModels<SchemaType>, Args extends Record<string, unknown>>(
+    model: M,
+    endpoint: string,
+    args: Args,
+    init?: RequestInit,
+  ) {
     const resource = camel(model);
-    const updateUrl = new URL(`${resource}/update`, this.apiBase);
+    const updateUrl = new URL(`${resource}/${endpoint}`, this.apiBase);
 
-    const res = await fetchWithParams(updateUrl, args, { method: "PUT" });
+    return fetchWithParams(updateUrl, args, init) as Promise<SimplifiedPlainResult<SchemaType, M, Args>>;
+  }
 
-    return res as SimplifiedPlainResult<SchemaType, M, T>;
+  async findMany<M extends GetModels<SchemaType>, T extends FindManyArgs<SchemaType, M>>(model: M, args: T) {
+    return this.fetchRpc(model, "findMany", args) as Promise<SimplifiedPlainResult<SchemaType, M, T>[]>;
+  }
+  async findUnique<M extends GetModels<SchemaType>, T extends FindUniqueArgs<SchemaType, M>>(model: M, args: T) {
+    return this.fetchRpc(model, "findUnique", args);
+  }
+  async updateOne<M extends GetModels<SchemaType>, T extends UpdateArgs<SchemaType, M>>(model: M, args: T) {
+    return this.fetchRpc(model, "update", args, { method: "PUT" });
   }
 }
